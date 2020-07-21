@@ -23,8 +23,13 @@ import io.netty.handler.codec.TooLongFrameException;
 /**
  * Handler that aggregate fragmented WebSocketFrame's.
  *
+ * 聚合 WebSocketFrame 碎片的处理器。
+ *
  * Be aware if PING/PONG/CLOSE frames are send in the middle of a fragmented {@link WebSocketFrame} they will
  * just get forwarded to the next handler in the pipeline.
+ *
+ * 注意如果 PING/PONG/CLOSE 帧是在碎片 WebSocketFrame 中间发送的，它们将会被转发到管道中的下一个处理器。
+ *
  */
 public class WebSocketFrameAggregator
         extends MessageAggregator<WebSocketFrame, WebSocketFrame, ContinuationWebSocketFrame, WebSocketFrame> {

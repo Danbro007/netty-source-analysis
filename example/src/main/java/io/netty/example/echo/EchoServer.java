@@ -31,7 +31,9 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 /**
+ *
  * Echoes back any received data from a client.
+ * 从客户端接收任何的数据。
  */
 public final class EchoServer {
 
@@ -52,9 +54,12 @@ public final class EchoServer {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
+            // ServerChannel 的引导类
             ServerBootstrap b = new ServerBootstrap();
+            // 配置上 EventLoopGroup
             b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
+                    // NioServerSocketChannel 通道的实现类,用 ReflectiveChannelFactory 来反射出 NioServerSocketChannel 实例
+              .channel(NioServerSocketChannel.class)
              .option(ChannelOption.SO_BACKLOG, 100)
              .handler(new LoggingHandler(LogLevel.INFO))
              .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -62,6 +67,7 @@ public final class EchoServer {
                  public void initChannel(SocketChannel ch) throws Exception {
                      ChannelPipeline p = ch.pipeline();
                      if (sslCtx != null) {
+                         // 配置ssl处理器
                          p.addLast(sslCtx.newHandler(ch.alloc()));
                      }
                      //p.addLast(new LoggingHandler(LogLevel.INFO));
@@ -70,9 +76,10 @@ public final class EchoServer {
              });
 
             // Start the server.
+            // 给服务端配置端口
             ChannelFuture f = b.bind(PORT).sync();
 
-            // Wait until the server socket is closed.
+            // 一直等待直到服务端 socket 关闭
             f.channel().closeFuture().sync();
         } finally {
             // Shut down all event loops to terminate all threads.

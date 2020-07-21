@@ -41,6 +41,11 @@ import java.util.Queue;
  * transfer requires complicated state management in a {@link ChannelHandler}
  * implementation.  {@link ChunkedWriteHandler} manages such complicated states
  * so that you can send a large data stream without difficulties.
+ *
+ * 添加异步写入大容量数据流的 ChannelHandler，既不会花费大量内存，也不会得到 OutOfMemoryError。
+ * 像文件传输这样的大数据流需要 ChannelHandler 实现类中复杂的状态管理。
+ * ChunkedWriteHandler 管理如此复杂的状态，所以你可以毫无困难地发送大数据流。
+ *
  * <p>
  * To use {@link ChunkedWriteHandler} in your application, you have to insert
  * a new {@link ChunkedWriteHandler} instance:

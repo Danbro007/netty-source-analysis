@@ -86,6 +86,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     /**
      * Set to {@code true} once the {@link AbstractChannel} is registered.Once set to {@code true} the value will never
      * change.
+     *
+     * 在注册 AbstractChannel 后设置为 true。一旦设置为真，该值将永远不会改变。
+     *
      */
     private boolean registered;
 
@@ -205,22 +208,29 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
+            // 添加的处理器是否能被其他 Pipline 共用并且是不是已添加过。
             checkMultiplicity(handler);
-
+            // 把处理器封装成一个 ChannelHandlerContext 对象，里面有 Pipline、处理器等
             newCtx = newContext(group, filterName(name, handler), handler);
-
+            // 添加到 PipLine 里
             addLast0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventloop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
+            // 一旦 registered 是 false 则意味着当前通道还没有注册在一个 EventLoop 上。
+            // 在这种情况下我们给当前 PipLine 添加一个 context 并且添加一个在通道注册后调用 ChannelHandler.handlerAdded(…)的任务
             if (!registered) {
                 newCtx.setAddPending();
+                // 把 newCtx 封装成成一个 task 稍后调用
                 callHandlerCallbackLater(newCtx, true);
                 return this;
             }
 
             EventExecutor executor = newCtx.executor();
+            // 如果新添加的 ChannelHandlerContext 对象的 executor 不是为当前线程
+            // 则给 executor 添加一个任务，这个任务是让 ChannelHandlerContext 执行它处理器的 handlerAdded() ,
+            // 它会在处理器被添加到 pipline 时执行。
             if (!executor.inEventLoop()) {
                 newCtx.setAddPending();
                 executor.execute(new Runnable() {
@@ -232,10 +242,13 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return this;
             }
         }
+        // 调用 ChannelHandlerContext 处理器的 handlerAdded() 方法
         callHandlerAdded0(newCtx);
         return this;
     }
-
+    // 把新的 ChannelHandlerContext 添加到 PipLine tail 的前一个位置
+    // 例如原先 PipLine 有 a、b、c、d 四个 ，我们要添加 e 这个 ChannelHandlerContext 对象，
+    // 因为 d 是 tail，则把 e 添加到 d 前面一个位置，既顺序是 a、b、c、e、d。
     private void addLast0(AbstractChannelHandlerContext newCtx) {
         AbstractChannelHandlerContext prev = tail.prev;
         newCtx.prev = prev;
@@ -395,7 +408,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addLast(ChannelHandler... handlers) {
         return addLast(null, handlers);
     }
-
+    // 添加 ChannelHandlerContext
     @Override
     public final ChannelPipeline addLast(EventExecutorGroup executor, ChannelHandler... handlers) {
         if (handlers == null) {
@@ -608,10 +621,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             h.added = true;
         }
     }
-
+    //调用处理器的 handlerAdded() 方法，这里的处理器其实就是 ChannelInitializer
     private void callHandlerAdded0(final AbstractChannelHandlerContext ctx) {
         try {
+            // 调用处理器的 handlerAdded 方法
             ctx.handler().handlerAdded(ctx);
+            // 更新处理器的状态
             ctx.setAddComplete();
         } catch (Throwable t) {
             boolean removed = false;
@@ -661,6 +676,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             firstRegistration = false;
             // We are now registered to the EventLoop. It's time to call the callbacks for the ChannelHandlers,
             // that were added before the registration was done.
+            // 我们现在注册到EventLoop。是时候调用ChannelHandlers的回调了，是在注册完成之前添加的。
             callHandlerAddedForAllHandlers();
         }
     }
@@ -1125,9 +1141,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
             // This Channel itself was registered.
             registered = true;
-
+            // 获取包含处理器的 ctx 对象
             pendingHandlerCallbackHead = this.pendingHandlerCallbackHead;
             // Null out so it can be GC'ed.
+            // 设置为 null 让 GC 回收
             this.pendingHandlerCallbackHead = null;
         }
 
@@ -1136,6 +1153,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
         while (task != null) {
+            // 执行所有的处理器的 handlerAdded() 方法
             task.execute();
             task = task.next;
         }
@@ -1143,13 +1161,15 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     private void callHandlerCallbackLater(AbstractChannelHandlerContext ctx, boolean added) {
         assert !registered;
-
+        // 把 ctx 转换成 task，
         PendingHandlerCallback task = added ? new PendingHandlerAddedTask(ctx) : new PendingHandlerRemovedTask(ctx);
+        // 设置第一个处理器,之后可以用 next 方法找到下一个处理器。
         PendingHandlerCallback pending = pendingHandlerCallbackHead;
         if (pending == null) {
             pendingHandlerCallbackHead = task;
         } else {
             // Find the tail of the linked-list.
+            // 找到 Pipline 的 tail 节点
             while (pending.next != null) {
                 pending = pending.next;
             }
@@ -1398,7 +1418,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             ctx.fireChannelActive();
-
+            // 开启了自动读取
             readIfIsAutoRead();
         }
 
@@ -1460,8 +1480,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         void execute() {
+            // 获取执行这个处理器任务的 EventLoop
             EventExecutor executor = ctx.executor();
+            // 如果这个 EventLoop 是当前线程
             if (executor.inEventLoop()) {
+                // 执行处理器的 handlerAdded()
                 callHandlerAdded0(ctx);
             } else {
                 try {

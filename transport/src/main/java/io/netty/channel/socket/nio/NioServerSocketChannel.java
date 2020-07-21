@@ -54,8 +54,12 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
              *  Use the {@link SelectorProvider} to open {@link SocketChannel} and so remove condition in
              *  {@link SelectorProvider#provider()} which is called by each ServerSocketChannel.open() otherwise.
              *
+             * 使用选择器提供者来打开一个 SocketChannel ，删除条件在 SelectorProvider 的 provider() 方法里，
+             * 这个方法被每一个 ServerSocketChannel.open() 调用
+             *
              *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
              */
+            // 返回一个新的 ServerSocket 通道
             return provider.openServerSocketChannel();
         } catch (IOException e) {
             throw new ChannelException(
@@ -69,6 +73,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance
      */
     public NioServerSocketChannel() {
+        // 通过 SelectorProvider 创建一个新的 ServerSocketChannel
         this(newSocket(DEFAULT_SELECTOR_PROVIDER));
     }
 
@@ -83,6 +88,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
+        // 调用父类 AbstractNioChannel 的构造器，设置监听操作为 OP_ACCEPT
         super(null, channel, SelectionKey.OP_ACCEPT);
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
@@ -112,6 +118,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         return null;
     }
 
+    // java 原生的通道
     @Override
     protected ServerSocketChannel javaChannel() {
         return (ServerSocketChannel) super.javaChannel();
@@ -122,8 +129,10 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         return SocketUtils.localSocketAddress(javaChannel().socket());
     }
 
+    // 绑定端口和IP
     @Override
     protected void doBind(SocketAddress localAddress) throws Exception {
+        // 如果 JDK 版本大于等于 7 则直接调用 bind()，如果版本低于 7 则先获取通道的socket然后再绑定
         if (PlatformDependent.javaVersion() >= 7) {
             javaChannel().bind(localAddress, config.getBacklog());
         } else {

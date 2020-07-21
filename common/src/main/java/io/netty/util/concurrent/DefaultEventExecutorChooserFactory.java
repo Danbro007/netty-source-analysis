@@ -32,6 +32,8 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @SuppressWarnings("unchecked")
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
+        // 先判断线程数，如果线程数是 2 次幂 则返回 PowerOfTwoEventExecutorChooser 对象
+        // 不是则返回 GenericEventExecutorChooser 这两个的区别是实现的 next() 方法不同。
         if (isPowerOfTwo(executors.length)) {
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {

@@ -61,6 +61,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private final Runnable clearReadPendingRunnable = new Runnable() {
         @Override
         public void run() {
+            // 到 selectionKey里把读操作删除
             clearReadPending0();
         }
     };
@@ -81,10 +82,12 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        // 调用父类 AbstractChannel 的构造器，其实就是给通道配置上id、pipline、父通道（如果有的话）和 Unsafe。
         super(parent);
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            // 设置通道为非阻塞
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
@@ -382,14 +385,18 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     @Override
     protected void doRegister() throws Exception {
         boolean selected = false;
+        // 一直循环
         for (;;) {
             try {
+                // 把通道注册到选择器上，注册完毕后返回一个 selectionKey，监听事件为 SelectionKey.OP_READ 既 ops = 0
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
+                // 如果失败则调用 selectNow()
                 if (!selected) {
                     // Force the Selector to select now as the "canceled" SelectionKey may still be
                     // cached and not removed because no Select.select(..) operation was called yet.
+                    // 强制选择器现在选择，因为"取消的" SelectionKey可能仍然存在缓存，没有删除，因为还没有调用select .select(..)操作。
                     eventLoop().selectNow();
                     selected = true;
                 } else {
@@ -409,15 +416,18 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     @Override
     protected void doBeginRead() throws Exception {
         // Channel.read() or ChannelHandlerContext.read() was called
+        // 调用 channel 或者 ChannelHandlerContext 的 read()
         final SelectionKey selectionKey = this.selectionKey;
         if (!selectionKey.isValid()) {
             return;
         }
 
         readPending = true;
-
+        // 获取选择器对当前通道监听的事件
         final int interestOps = selectionKey.interestOps();
+        // 如果监听通道的事件不是 ACCEPT
         if ((interestOps & readInterestOp) == 0) {
+            // 取或 0 0000 | 1 0000 = 1 0000，既把选择器对当前通道的监听事件修改为 ACCEPT
             selectionKey.interestOps(interestOps | readInterestOp);
         }
     }

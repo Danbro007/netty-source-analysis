@@ -71,22 +71,24 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         if (nThreads <= 0) {
             throw new IllegalArgumentException(String.format("nThreads: %d (expected: > 0)", nThreads));
         }
-
+        // 如果执行器为 null 则配置默认的执行器。
         if (executor == null) {
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
-
+        // 用来存放 NioEventLoop 对象
         children = new EventExecutor[nThreads];
-
+        // 创建线程数的 EventLoop
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
+                // 创建 NioEventLoop 对象 并放入 children 里
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
                 // TODO: Think about if this is a good exception type
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
+                // 如果创建失败 则把 所有已创建的 NioEventLoop 关闭
                 if (!success) {
                     for (int j = 0; j < i; j ++) {
                         children[j].shutdownGracefully();
@@ -107,22 +109,23 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 }
             }
         }
-
+        // 根据线程数是不是 2 的次幂返回不同的事件执行器
         chooser = chooserFactory.newChooser(children);
 
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
+                // 通知监听器创建 NioEventLoop 失败
                 if (terminatedChildren.incrementAndGet() == children.length) {
                     terminationFuture.setSuccess(null);
                 }
             }
         };
-
+        // 给每个 NioEventLoop 添加监听器
         for (EventExecutor e: children) {
             e.terminationFuture().addListener(terminationListener);
         }
-
+        // 把创建的 NioEventLoop 放入 set 里，并设置这个 set 为只读。
         Set<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);

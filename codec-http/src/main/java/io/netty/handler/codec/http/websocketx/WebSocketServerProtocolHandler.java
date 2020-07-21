@@ -37,14 +37,24 @@ import static io.netty.handler.codec.http.HttpVersion.*;
 /**
  * This handler does all the heavy lifting for you to run a websocket server.
  *
+ * 这个处理器为你做所有繁重的工作来运行一个 websocket 服务器。
+ *
  * It takes care of websocket handshaking as well as processing of control frames (Close, Ping, Pong). Text and Binary
  * data frames are passed to the next handler in the pipeline (implemented by you) for processing.
+ *
+ * 它负责 websocket 握手以及处理控制帧(Close，Ping, Pong)。
+ * 文本和二进制数据帧被传递到管道中的下一个处理程序(由你实现)进行处理。
  *
  * See <tt>io.netty.example.http.websocketx.html5.WebSocketServer</tt> for usage.
  *
  * The implementation of this handler assumes that you just want to run  a websocket server and not process other types
  * HTTP requests (like GET and POST). If you wish to support both HTTP requests and websockets in the one server, refer
  * to the <tt>io.netty.example.http.websocketx.server.WebSocketServer</tt> example.
+ *
+ *
+ * 这个处理程序的实现假设你只是想运行一个 websocket 服务器，而不是处理其他类型的 HTTP 请求(如GET和POST)。
+ * 如果您希望在一个服务器中同时支持 HTTP 请求和 websockets ，
+ * 请参考* <tt>io.net .example. HTTP .websocketx.server. websocketserver </tt>示例。
  *
  * To know once a handshake was done you can intercept the
  * {@link ChannelInboundHandler#userEventTriggered(ChannelHandlerContext, Object)} and check if the event was instance

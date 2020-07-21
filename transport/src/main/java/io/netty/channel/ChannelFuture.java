@@ -25,6 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * The result of an asynchronous {@link Channel} I/O operation.
+ *
+ * 通道 IO 异步操作的结果。
+ *
  * <p>
  * All I/O operations in Netty are asynchronous.  It means any I/O calls will
  * return immediately with no guarantee that the requested I/O operation has
@@ -32,6 +35,10 @@ import java.util.concurrent.TimeUnit;
  * a {@link ChannelFuture} instance which gives you the information about the
  * result or status of the I/O operation.
  * <p>
+ *
+ *  在 Netty 所有的 IO 操作是异步的。这意味着任何 I/O 调用将立即返回，不保证所请求的 I/O 操作已经在调用结束时完成。
+ *  相反，它将返回一个 ChannelFuture 实例，它给你关于 I/O 操作的结果或状态的信息。
+ *
  * A {@link ChannelFuture} is either <em>uncompleted</em> or <em>completed</em>.
  * When an I/O operation begins, a new future object is created.  The new future
  * is uncompleted initially - it is neither succeeded, failed, nor cancelled

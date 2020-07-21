@@ -35,7 +35,12 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      * Calls {@link ChannelHandlerContext#fireChannelRegistered()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
      *
+     * 调用 ChannelHandlerContext 的 fireChannelRegistered() 方法转发 ChannelPipeline 里的下一个 ChannelInboundHandler。
+     *
      * Sub-classes may override this method to change behavior.
+     *
+     * 子类可以重写这个方法来改变行为。
+     *
      */
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
@@ -59,6 +64,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      *
      * Sub-classes may override this method to change behavior.
      */
+    // 通道就绪事件
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelActive();
@@ -81,6 +87,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      *
      * Sub-classes may override this method to change behavior.
      */
+    // 通道读取数据事件
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ctx.fireChannelRead(msg);
@@ -92,6 +99,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      *
      * Sub-classes may override this method to change behavior.
      */
+    // 通道读取数据完毕事件
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelReadComplete();
@@ -125,6 +133,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      *
      * Sub-classes may override this method to change behavior.
      */
+    // 通道发生异常事件
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
             throws Exception {

@@ -408,7 +408,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         checkNotNull(listener, "listener");
         notifyListenerWithStackOverFlowProtection(eventExecutor, future, listener);
     }
-
+    // 通知所有的监听器
     private void notifyListeners() {
         EventExecutor executor = executor();
         if (executor.inEventLoop()) {

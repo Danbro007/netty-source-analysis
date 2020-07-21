@@ -21,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * The result of an asynchronous operation.
+ *
+ * 异步操作的结果
+ *
  */
 @SuppressWarnings("ClassNameSameAsAncestorName")
 public interface Future<V> extends java.util.concurrent.Future<V> {
@@ -28,17 +31,25 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
     /**
      * Returns {@code true} if and only if the I/O operation was completed
      * successfully.
+     *
+     * 当且仅当 I/O 操作成功完成时，返回 true。
+     *
      */
     boolean isSuccess();
 
     /**
      * returns {@code true} if and only if the operation can be cancelled via {@link #cancel(boolean)}.
+     *
+     * 当且仅当操作可以通过 cancel(boolean) 取消时，返回 true。
+     *
      */
     boolean isCancellable();
 
     /**
      * Returns the cause of the failed I/O operation if the I/O operation has
      * failed.
+     *
+     * 如果 I/O 操作失败，返回 I/O 操作失败的原因。
      *
      * @return the cause of the failure.
      *         {@code null} if succeeded or this future is not

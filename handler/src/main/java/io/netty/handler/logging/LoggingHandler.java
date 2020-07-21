@@ -185,9 +185,11 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     @Override
     public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+        // 打印绑定的ip和端口
         if (logger.isEnabled(internalLevel)) {
             logger.log(internalLevel, format(ctx, "BIND", localAddress));
         }
+        // 调用上一个节点的 bind()
         ctx.bind(localAddress, promise);
     }
 

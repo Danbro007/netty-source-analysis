@@ -108,6 +108,9 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
 
     /**
      * Connect a {@link Channel} to the remote peer.
+     *
+     * 连接一个通道到远程。
+     *
      */
     public ChannelFuture connect() {
         validate();

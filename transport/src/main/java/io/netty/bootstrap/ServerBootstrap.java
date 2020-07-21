@@ -76,8 +76,13 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Set the {@link EventLoopGroup} for the parent (acceptor) and the child (client). These
      * {@link EventLoopGroup}'s are used to handle all the events and IO for {@link ServerChannel} and
      * {@link Channel}'s.
+     *
+     * 给父（接收器） 和 子（客户端）设置 EventLoopGroup。这些 EventLoopGroup 被用于处理所有的事件
+     * 以及 ServerChannel 和 Channel 的 IO。
+     *
      */
     public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) {
+        // BossWorkGroup 是由 AbstractBootstrap 的 group 配置
         super.group(parentGroup);
         if (childGroup == null) {
             throw new NullPointerException("childGroup");
@@ -85,6 +90,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         if (this.childGroup != null) {
             throw new IllegalStateException("childGroup set already");
         }
+        // ServerBootstrap 负责配置
         this.childGroup = childGroup;
         return this;
     }
@@ -93,6 +99,10 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they get created
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
      * {@link ChannelOption}.
+     *
+     * 允许指定一个 ChannelOption，在通道实例被创建后使用(在接受者接受通道之后)。使用 value
+     * 为 null 来删除之前设置的 ChannelOption 。
+     *
      */
     public <T> ServerBootstrap childOption(ChannelOption<T> childOption, T value) {
         if (childOption == null) {
@@ -128,6 +138,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     /**
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
+     *
+     * 设置用于为通道的请求提供服务的通道处理器。
+     *
      */
     public ServerBootstrap childHandler(ChannelHandler childHandler) {
         if (childHandler == null) {
@@ -137,13 +150,16 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return this;
     }
 
+    // 初始化通道
     @Override
     void init(Channel channel) throws Exception {
+        // 对 ServerBootstrap 配置设置的参数数组
         final Map<ChannelOption<?>, Object> options = options0();
+        // 把设置在 ServerBootstrap 上的参数设置到 NioServerSocketChannel 上并打印日志
         synchronized (options) {
             setChannelOptions(channel, options, logger);
         }
-
+        // 把设置的属性放入 NioServerSocketChannel 上
         final Map<AttributeKey<?>, Object> attrs = attrs0();
         synchronized (attrs) {
             for (Entry<AttributeKey<?>, Object> e: attrs.entrySet()) {
@@ -152,20 +168,23 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 channel.attr(key).set(e.getValue());
             }
         }
-
+        // 获取 NioServerSocketChannel 的 Pipline
         ChannelPipeline p = channel.pipeline();
-
+        // workGroup
         final EventLoopGroup currentChildGroup = childGroup;
+        // 配置在 workGroup 的处理器
         final ChannelHandler currentChildHandler = childHandler;
         final Entry<ChannelOption<?>, Object>[] currentChildOptions;
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs;
+        // 把对 workGroup 设置的配置和属性转换成 Entry 数组
         synchronized (childOptions) {
             currentChildOptions = childOptions.entrySet().toArray(newOptionArray(childOptions.size()));
         }
         synchronized (childAttrs) {
             currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(childAttrs.size()));
         }
-
+        // 添加一个通道初始化器，当通道初始化的时候会在当前通道 pipline 里添加一个从 ServerBootstrapConfig 获取的日志处理器
+        //
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) throws Exception {
@@ -174,7 +193,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                // 让一个 EventLoop 执行添加 ServerBootstrapAcceptor 到 PipLine 的任务
+                // ServerBootstrapAcceptor 的作用是当有新的客户端来连接时会给这个连接的通道设置好 TCP 参数、配置上处理器，
+                // 然后把这个连接的通道注册进 workGroup 里，之后让 workGroup 里的 NioEventLoop 来真正处理这个请求。
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -230,9 +251,11 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             // not be able to load the class because of the file limit it already reached.
             //
             // See https://github.com/netty/netty/issues/1328
+            // 开启自动读取的任务
             enableAutoReadTask = new Runnable() {
                 @Override
                 public void run() {
+                    // 给 NioServerSocketChannel 开启自动读取,自动调用 ChannelHandlerContext read()方法
                     channel.config().setAutoRead(true);
                 }
             };
@@ -242,9 +265,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             final Channel child = (Channel) msg;
-
+            // 给客户端的通道添加处理器
             child.pipeline().addLast(childHandler);
-
+            // 给客户端的通道设置 TCP 参数
             setChannelOptions(child, childOptions, logger);
 
             for (Entry<AttributeKey<?>, Object> e: childAttrs) {
@@ -252,6 +275,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             }
 
             try {
+                // 把客户端的通道注册进 workGroup 里并添加一个监听器来监听连接失败
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
@@ -294,6 +318,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     /**
      * Return the configured {@link EventLoopGroup} which will be used for the child channels or {@code null}
      * if non is configured yet.
+     *
+     * 返回已设置的 EventLoopGroup，它将用于子通道。如果未配置，返回 null。
      *
      * @deprecated Use {@link #config()} instead.
      */

@@ -192,6 +192,11 @@ public interface ChannelOutboundInvoker {
      * read, and triggers a
      * {@link ChannelInboundHandler#channelReadComplete(ChannelHandlerContext) channelReadComplete} event so the
      * handler can decide to continue reading.  If there's a pending read operation already, this method does nothing.
+     *
+     * 请求到通道读取数据到第一个入站缓冲区，触发一个 ChannelInboundHandler 的 channelRead(ChannelHandlerContext, Object) 事件，
+     * 如果数据被读取，并且触发 ChannelInboundHandler 的 channelReadComplete(ChannelHandlerContext) 事件这样来决定处理器继续读取。
+     * 如果已经有一个挂起的读操作，此方法不执行任何操作。
+     *
      * <p>
      * This will result in having the
      * {@link ChannelOutboundHandler#read(ChannelHandlerContext)}

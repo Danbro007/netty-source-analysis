@@ -70,6 +70,7 @@ public class DefaultChannelConfig implements ChannelConfig {
     }
 
     protected DefaultChannelConfig(Channel channel, RecvByteBufAllocator allocator) {
+        // 把通道里的元数据放入缓冲区里
         setRecvByteBufAllocator(allocator, channel.metadata());
         this.channel = channel;
     }

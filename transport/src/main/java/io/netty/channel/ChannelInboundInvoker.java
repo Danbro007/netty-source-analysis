@@ -23,6 +23,8 @@ public interface ChannelInboundInvoker {
      * This will result in having the  {@link ChannelInboundHandler#channelRegistered(ChannelHandlerContext)} method
      * called of the next  {@link ChannelInboundHandler} contained in the  {@link ChannelPipeline} of the
      * {@link Channel}.
+     *
+     *
      */
     ChannelInboundInvoker fireChannelRegistered();
 
@@ -47,9 +49,11 @@ public interface ChannelInboundInvoker {
     /**
      * A {@link Channel} is inactive now, which means it is closed.
      *
+     * 通道现在不活跃意味着它被关闭了。
+     *
      * This will result in having the  {@link ChannelInboundHandler#channelInactive(ChannelHandlerContext)} method
      * called of the next  {@link ChannelInboundHandler} contained in the  {@link ChannelPipeline} of the
-     * {@link Channel}.
+     * {@link Channel}. *
      */
     ChannelInboundInvoker fireChannelInactive();
 
