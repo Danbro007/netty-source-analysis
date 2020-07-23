@@ -147,10 +147,12 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
+        // 通过 SocketUtils 工具获取到 JDK 的 SocketChannel 这个 SocketChannel 就是 bossGroup 监听到 ACCEPT 事件
         SocketChannel ch = SocketUtils.accept(javaChannel());
 
         try {
             if (ch != null) {
+                // 把 JDk 的 SocketChannel 封装成一个 NioSocketChannel 并放入 容器里
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }

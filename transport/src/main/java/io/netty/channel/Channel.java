@@ -215,30 +215,35 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
          * Return the assigned {@link RecvByteBufAllocator.Handle} which will be used to allocate {@link ByteBuf}'s when
          * receiving data.
          */
+        // 返回接收数据的缓冲区
         RecvByteBufAllocator.Handle recvBufAllocHandle();
 
         /**
          * Return the {@link SocketAddress} to which is bound local or
          * {@code null} if none.
          */
+        // 返回绑定的 SocketAddress
         SocketAddress localAddress();
 
         /**
          * Return the {@link SocketAddress} to which is bound remote or
          * {@code null} if none is bound yet.
          */
+        // 返回客户端的 SocketAddress
         SocketAddress remoteAddress();
 
         /**
          * Register the {@link Channel} of the {@link ChannelPromise} and notify
          * the {@link ChannelFuture} once the registration was complete.
          */
+        // 注册 ChannelPromise 里的通道，当注册完成时立刻通知 ChannelFuture（ChannelPromise 继承了 ChannelFuture）。
         void register(EventLoop eventLoop, ChannelPromise promise);
 
         /**
          * Bind the {@link SocketAddress} to the {@link Channel} of the {@link ChannelPromise} and notify
          * it once its done.
          */
+        // 把 SocketAddress 绑定到 ChannelPromise 的 通道上，在完成后立刻通知 ChannelPromise。
         void bind(SocketAddress localAddress, ChannelPromise promise);
 
         /**

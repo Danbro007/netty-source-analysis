@@ -956,6 +956,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
+        // 从 head 节点往后执行处理器的 channelRead() 方法
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1169,7 +1170,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             pendingHandlerCallbackHead = task;
         } else {
             // Find the tail of the linked-list.
-            // 找到 Pipline 的 tail 节点
+            // 找到 pipline  tail 节点,添加新的节点在 tail 节点后面。
             while (pending.next != null) {
                 pending = pending.next;
             }
@@ -1418,7 +1419,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             ctx.fireChannelActive();
-            // 开启了自动读取
+            // 如果开启了自动读取则把
             readIfIsAutoRead();
         }
 
@@ -1482,12 +1483,13 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         void execute() {
             // 获取执行这个处理器任务的 EventLoop
             EventExecutor executor = ctx.executor();
-            // 如果这个 EventLoop 是当前线程
+            // 如果这个 EventLoop 是当前线程则同步执行
             if (executor.inEventLoop()) {
                 // 执行处理器的 handlerAdded()
                 callHandlerAdded0(ctx);
             } else {
                 try {
+                    // 不是则异步执行
                     executor.execute(this);
                 } catch (RejectedExecutionException e) {
                     if (logger.isWarnEnabled()) {

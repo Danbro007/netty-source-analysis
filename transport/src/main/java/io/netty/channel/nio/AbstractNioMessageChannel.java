@@ -57,6 +57,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
 
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
+        // 存储客户端的 NioSocketChannel 对象的容器
         private final List<Object> readBuf = new ArrayList<Object>();
 
         @Override
@@ -64,6 +65,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             assert eventLoop().inEventLoop();
             final ChannelConfig config = config();
             final ChannelPipeline pipeline = pipeline();
+            // 获取接收数据的缓冲区
             final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
             allocHandle.reset(config);
 
@@ -72,6 +74,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        //把获取的 SocketChannel 转换成 NioSocketChannel 对象放入容器
                         int localRead = doReadMessages(readBuf);
                         if (localRead == 0) {
                             break;
@@ -86,16 +89,20 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 } catch (Throwable t) {
                     exception = t;
                 }
-
                 int size = readBuf.size();
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
+                    // 遍历所有在 readBuf 里的 NioSocketChannel ,对它们调用 pipline 里的 处理器执行 channelRead() 来处理读取的消息
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
+                //
                 readBuf.clear();
+                // 标记读取已完成
                 allocHandle.readComplete();
+                // 执行 pipline 里所有处理器的 readComplete()
                 pipeline.fireChannelReadComplete();
 
+                // 如果中间出现异常则执行处理器的 exceptionCaught() 方法
                 if (exception != null) {
                     closed = closeOnReadError(exception);
 

@@ -388,7 +388,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         // 一直循环
         for (;;) {
             try {
-                // 把通道注册到选择器上，注册完毕后返回一个 selectionKey，监听事件为 SelectionKey.OP_READ 既 ops = 0
+                // 把通道注册到选择器上，注册完毕后返回一个 selectionKey，监听事件为 ops = 0
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

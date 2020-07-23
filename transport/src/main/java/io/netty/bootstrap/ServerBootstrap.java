@@ -265,7 +265,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             final Channel child = (Channel) msg;
-            // 给客户端的通道添加处理器
+            // 给客户端的通道添加处理器,就是对 ServerBootstrap.childHandler() 时设置的
             child.pipeline().addLast(childHandler);
             // 给客户端的通道设置 TCP 参数
             setChannelOptions(child, childOptions, logger);
@@ -275,7 +275,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             }
 
             try {
-                // 把客户端的通道注册进 workGroup 里并添加一个监听器来监听连接失败
+                // 把客户端的通道注册进 workGroup 里的一个 EventLoop 并添加一个监听器来监听连接失败
+                // 这里选择的 EventLoop 的策略是轮询
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {

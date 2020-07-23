@@ -594,12 +594,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
         }
     }
-
+    //处理 NIO 事件
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         if (!k.isValid()) {
             final EventLoop eventLoop;
             try {
+                // 获取当前通道的 EventLoop
                 eventLoop = ch.eventLoop();
             } catch (Throwable ignored) {
                 // If the channel implementation throws an exception because there is no event loop, we ignore this
@@ -620,27 +621,34 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
 
         try {
+            // 获取选择器关注的事件
             int readyOps = k.readyOps();
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
             // the NIO JDK channel implementation may throw a NotYetConnectedException.
+            ///在尝试触发 read(…) 或 write(…) 之前，我们首先需要调用 finishConnect()，否则，
+            // NIO JDK通道实现可能会抛出 NotYetConnectedException 异常
             if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
                 // remove OP_CONNECT as otherwise Selector.select(..) will always return without blocking
+                // 删除OP_CONNECT，否则Selector.select(..)将始终不阻塞返回
                 // See https://github.com/netty/netty/issues/924
                 int ops = k.interestOps();
                 ops &= ~SelectionKey.OP_CONNECT;
                 k.interestOps(ops);
-
+                // 如果选择器关注客户端通道的事件为 OP_CONNECT 则把事件修改改为 OP_READ
                 unsafe.finishConnect();
             }
 
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
+            // 先处理 OP_WRITE，因为我们可以写一些队列缓冲区，这样就可以释放内存。
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
+                // 调用forceFlush，它还会在没有东西可写时清除OP_WRITE
                 ch.unsafe().forceFlush();
             }
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
+            // 如果当前连接是 OP_READ 或者 OP_ACCEPT 事件则会触发当前通道的 channelRead()
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                 unsafe.read();
             }

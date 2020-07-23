@@ -341,7 +341,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         invokeChannelRead(findContextInbound(), msg);
         return this;
     }
-
+    // 这里的 m 就是 NioSocketChannel
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
