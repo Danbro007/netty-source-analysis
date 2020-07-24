@@ -24,7 +24,8 @@ final class DefaultSelectStrategy implements SelectStrategy {
     static final SelectStrategy INSTANCE = new DefaultSelectStrategy();
 
     private DefaultSelectStrategy() { }
-
+    // 如果还有任务既 hasTasks = true 则先执行 selectNow() 返回已准备好的通道数 ，selectNow() 是立即返回的，不是阻塞等待
+    // 如果没有待执行的任务则执行select，有可能是阻塞等待IO事件
     @Override
     public int calculateStrategy(IntSupplier selectSupplier, boolean hasTasks) throws Exception {
         return hasTasks ? selectSupplier.get() : SelectStrategy.SELECT;

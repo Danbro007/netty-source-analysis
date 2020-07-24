@@ -100,13 +100,13 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      */
     protected final Runnable pollScheduledTask(long nanoTime) {
         assert inEventLoop();
-
+        // 返回定时任务队列的第一个任务，任务位置是按照时间排序的。
         Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         ScheduledFutureTask<?> scheduledTask = scheduledTaskQueue == null ? null : scheduledTaskQueue.peek();
         if (scheduledTask == null) {
             return null;
         }
-
+        // 如果定时任务的截止时间小于当前时间则把它返回并把这个任务在定时任务队列里删除
         if (scheduledTask.deadlineNanos() <= nanoTime) {
             scheduledTaskQueue.remove();
             return scheduledTask;
