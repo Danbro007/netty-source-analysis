@@ -150,6 +150,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         if (delay < 0) {
             delay = 0;
         }
+        // 通过 ScheduledFutureTask.deadlineNanos() 计算出下一次定时任务的时间公式是 (当前时间 + delay)，然后创建一个定时任务到定时任务队列里。
         return schedule(new ScheduledFutureTask<Void>(
                 this, command, null, ScheduledFutureTask.deadlineNanos(unit.toNanos(delay))));
     }

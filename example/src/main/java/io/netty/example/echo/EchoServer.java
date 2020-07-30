@@ -29,9 +29,9 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
 
 /**
- *
  * Echoes back any received data from a client.
  * 从客户端接收任何的数据。
  */
@@ -39,6 +39,7 @@ public final class EchoServer {
 
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
+    private static DefaultEventExecutorGroup executors = new DefaultEventExecutorGroup(16);
 
     public static void main(String[] args) throws Exception {
         // Configure SSL.
@@ -59,21 +60,22 @@ public final class EchoServer {
             // 配置上 EventLoopGroup
             b.group(bossGroup, workerGroup)
                     // NioServerSocketChannel 通道的实现类,用 ReflectiveChannelFactory 来反射出 NioServerSocketChannel 实例
-              .channel(NioServerSocketChannel.class)
-             .option(ChannelOption.SO_BACKLOG, 100)
-             .handler(new LoggingHandler(LogLevel.INFO))
-             .childHandler(new ChannelInitializer<SocketChannel>() {
-                 @Override
-                 public void initChannel(SocketChannel ch) throws Exception {
-                     ChannelPipeline p = ch.pipeline();
-                     if (sslCtx != null) {
-                         // 配置ssl处理器
-                         p.addLast(sslCtx.newHandler(ch.alloc()));
-                     }
-                     //p.addLast(new LoggingHandler(LogLevel.INFO));
-                     p.addLast(new EchoServerHandler());
-                 }
-             });
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            if (sslCtx != null) {
+                                // 配置ssl处理器
+                                p.addLast(sslCtx.newHandler(ch.alloc()));
+                            }
+                            //p.addLast(new LoggingHandler(LogLevel.INFO));
+                            p.addLast(executors,new EchoServerHandler());
+                            p.addLast(new EchoOutServerHandler());
+                        }
+                    });
 
             // Start the server.
             // 给服务端配置端口

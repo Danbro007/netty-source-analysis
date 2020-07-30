@@ -341,7 +341,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         invokeChannelRead(findContextInbound(), msg);
         return this;
     }
-    // 这里的 m 就是 NioSocketChannel
+
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
@@ -349,8 +349,8 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
             next.invokeChannelRead(m);
         } else {
             executor.execute(new Runnable() {
-                @Override
-                public void run() {
+                    @Override
+                    public void run() {
                     next.invokeChannelRead(m);
                 }
             });
@@ -809,22 +809,31 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     }
 
     private void write(Object msg, boolean flush, ChannelPromise promise) {
+        // 查找下一个出站的处理器
         AbstractChannelHandlerContext next = findContextOutbound();
+        // 对象计数器
         final Object m = pipeline.touch(msg, next);
+        // 获取 next 的执行器
         EventExecutor executor = next.executor();
+        // 同步处理
         if (executor.inEventLoop()) {
+            // 如果 flush = true 当执行好处理器的 write() 方法 会执行处理器的 flush() 方法
             if (flush) {
                 next.invokeWriteAndFlush(m, promise);
             } else {
                 next.invokeWrite(m, promise);
             }
-        } else {
+        }
+        // 异步处理
+        else {
             AbstractWriteTask task;
+            // 把封装成一个 task 对象
             if (flush) {
                 task = WriteAndFlushTask.newInstance(next, m, promise);
             }  else {
                 task = WriteTask.newInstance(next, m, promise);
             }
+            // 把任务放入线程的任务队列里
             safeExecute(executor, task, promise, m);
         }
     }
